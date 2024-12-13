@@ -9,7 +9,7 @@ import time
 start_time = time.time()
 
 
-file_path = "/mnt/c/Users/Admin/Desktop/code python/data.txt"
+file_path = "/mnt/c/Users/Admin/Desktop/code python/tabu_and_genetic_bản_đầu/data.txt"
 
 # Đọc file và xử lý dữ liệu
 with open(file_path, "r") as f:
@@ -31,6 +31,21 @@ with open(file_path, "r") as f:
 
 
 #########################################
+
+def optimize_route(route):
+    # Tham lam
+    optimized_route = ''
+    remaining_points = route[:]
+    current_point = 0
+
+    while remaining_points:
+        next_point = min(remaining_points,
+                         key=lambda x: distance_matrix[current_point][x])
+        optimized_route += str(next_point) + ' '
+        remaining_points.remove(next_point)
+        current_point = next_point
+
+    return "0 " + optimized_route.strip() + " 0"
 
 
 def generate_random_sequence4(n, k):
@@ -94,18 +109,21 @@ def generate_random_sequence_all(n, k):
 
 def gen_state(n):
     prop = random.random()
-    if prop < 0.03:
-        state = generate_random_sequence_all(n, k)
-    elif prop < 0.4:
-        state = generate_random_sequence6(n, k)
-    elif prop < 0.7:
-        state = generate_random_sequence4(n, k)
+    if n > 30:
+        if prop < 0.01:
+            state = generate_random_sequence_all(n, k)
+
+        elif prop < 0.9:
+            state = generate_random_sequence4(n, k)
+        else:
+            state = generate_random_sequence6(n, k)
     else:
-        state = generate_random_sequence1(n, k)
+        if prop < 0.1:
+            state = generate_random_sequence_all(n, k)
+        else:
+            state = generate_random_sequence1(n, k)
     return state
 
-
-initial_state = gen_state(n)
 
 ###########################################################################
 """## hàm fitness"""
@@ -154,7 +172,7 @@ def fitness(state, K):
 """# khởi tạo các giá trị ban đầu vào population"""
 
 population = PriorityQueue()
-MAX_SIZE = 20
+MAX_SIZE = 300
 top_g = [None, None]  # g<10 push ~ O(1) but g -> 100 slow
 is_added = {}
 
@@ -197,23 +215,23 @@ def queue_push(v, top_g, is_added, population):
     return None
 
 
-for times in range(12000):
+for times in range(15000):
     temp_state = gen_state(n)
 
     v = (-fitness(temp_state, k), temp_state)
     queue_push(v, top_g, is_added, population)
 
 
-temp_list = []
+# temp_list = []
 
-while not population.empty():
-    item = population.get()
-    temp_list.append(item)
- # In từng phần tử
+# while not population.empty():
+#     item = population.get()
+#     temp_list.append(item)
+#  # In từng phần tử
 
-# Đưa lại các phần tử vào PriorityQueue
-for item in temp_list:
-    population.put(item)
+# # Đưa lại các phần tử vào PriorityQueue
+# for item in temp_list:
+#     population.put(item)
 
 ################################################
 
@@ -253,22 +271,22 @@ def make_love(top_g, K, PROP_LOVE):
     _, p2 = p2
     # make_love
     mutation = gen_state(n)
-    if prop < 0.2:
+    if prop < 0.3:
 
         for i in range(len(p1)):
             if random.random() < PROP_LOVE:
                 new_state.append([p1[i], mutation[i]][random.randint(0, 1)])
             else:
                 new_state.append([p1[i], p2[i]][random.randint(0, 1)])
-    elif prop < 0.4:
-
-        index = random.randint(20, len(p1)-20)
+    elif prop < 0.7:
+        vl_temp = len(p1)
+        index = random.randint(vl_temp/4, int(vl_temp/1.5))
         new_state = p1[:index] + p2[index:]
 
-    elif prop < 0.7:
+    elif prop < 0.8:
         # thay đổi 1 phần
         for i in range(len(p1)):
-            if random.random() < 0.6:
+            if random.random() < 0.5:
                 new_state.append(p1[i])
                 continue
 
@@ -278,7 +296,7 @@ def make_love(top_g, K, PROP_LOVE):
                 new_state.append([p1[i], p2[i]][random.randint(0, 1)])
     elif prop < 0.9:
         for i in range(len(p1)):
-            if random.random() < 0.6:
+            if random.random() < 0.5:
                 new_state.append(p2[i])
                 continue
 
@@ -311,16 +329,16 @@ def make_love(top_g, K, PROP_LOVE):
 
 
 ###################################################################################################
-for i in range(1000):
+for i in range(5000):
     v = make_love(top_g, k, PROP_LOVE)
 
     queue_push((-fitness(v, k), v), top_g, is_added, population)
 
 
 #################
-for c in range(100):
+for c in range(150):
     population_list_temp = take_out_take_back()
-    for i in range(100):
+    for i in range(300):
         p1 = population_list_temp[random.randint(0,  MAX_SIZE-1)]
         p2 = population_list_temp[random.randint(0, MAX_SIZE-1)]
         v = make_love([p1, p2], k, PROP_LOVE)
@@ -336,12 +354,10 @@ while not population.empty():
     item = population.get()
 
     temp_list.append(item)
-    if i == MAX_SIZE:
-        print(item)  # In từng phần tử
-        print(i)
-    i += 1
+
 # Đưa lại các phần tử vào PriorityQueue
 best = item[1]
+score = item[0]
 for item in temp_list:
     population.put(item)
 
@@ -355,9 +371,9 @@ for worker in range(k):
         if best[index] == worker:
             temp.append(index + 1)
 
-    print()
     print(len(temp) + 2)
-    print([0] + temp + [0])
+    print(optimize_route(temp))
+
 
 print("***********************************************")
 # Kết thúc đo thời gian
@@ -365,3 +381,4 @@ end_time = time.time()
 
 # In thời gian chạy
 print(f"Thời gian chạy: {end_time - start_time:.2f} giây")
+print("score" + str(-score))

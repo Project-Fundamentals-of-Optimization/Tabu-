@@ -7,7 +7,7 @@ import time
 
 start_time = time.time()
 
-file_path = "/mnt/c/Users/Admin/Desktop/code python/data.txt"
+file_path = "/mnt/c/Users/Admin/Desktop/code python/tabu_and_genetic_bản_đầu/data.txt"
 
 # Đọc file và xử lý dữ liệu
 with open(file_path, "r") as f:
@@ -42,6 +42,7 @@ def initialize_solution(n, k):
 def initialize_solution_2(n, k):
     solution = [[] for _ in range(k)]
     customers = list(range(1, n + 1))
+    random.shuffle(customers)
     chunk_size = n // k  # Kích thước mỗi phần (chia nguyên)
     remainder = n % k  # Số lượng khách hàng dư ra
 
@@ -61,16 +62,17 @@ def initialize_solution_2(n, k):
 def initialize_solution_3_random(n, k):
     solution = [[] for _ in range(k)]
     customers = list(range(1, n + 1))
-    remaining_customers = n - 3 * (k - 1)
+    remaining_customers = n - (3 * (k-1) + 2)
     for i in range(k):
-        solution[i].append(customers[i])
-        solution[i].append(customers[2*i])
-        solution[i].append(customers[3*i])
 
-    temp_i = 3 * (k - 1)
+        solution[i].append(customers[3*i])
+        solution[i].append(customers[3*i + 1])
+        solution[i].append(customers[3*i + 2])
+
+    temp_i = 3 * k
     for v in range(remaining_customers):
         random_index = random.randint(0, k - 1)
-        solution[random_index].append(customers[temp_i + v])
+        solution[random_index].append(customers[temp_i + v - 1])
 
     return solution
 
@@ -119,7 +121,7 @@ def canonical_form(solution):
     return canonical_solution
 
 
-def tabu_search(solution, max_iter=60000):
+def tabu_search(solution, max_iter=30000):
     # Thay vì chỉ dùng deque, ta dùng thêm set để kiểm tra nhanh
     tabu_list = deque()
     tabu_set = set()
@@ -172,45 +174,45 @@ def tabu_search(solution, max_iter=60000):
                 tabu_set.remove(oldest)
                 length_tabu -= 1
 
-        # elif prop < 0.1:
-        #     max_idx, min_idx = sorted_times[random.randint(
-        #         0, int(k/2))][0], sorted_times[random.randint(int(k/2) + 1, k-1)][0]
+        elif prop < 0.9:
+            max_idx, min_idx = sorted_times[random.randint(
+                2, int(k/2))][0], sorted_times[random.randint(int(k/2) + 1, k-1)][0]
 
-        #     temp_length = len(solution[max_idx])
-        #     if temp_length >= 1:
-        #         vertex = random.randint(0, temp_length - 1)
-        #         transfer_point = solution[max_idx][vertex]
+            temp_length = len(solution[max_idx])
+            if temp_length >= 1:
+                vertex = random.randint(0, temp_length - 1)
+                transfer_point = solution[max_idx][vertex]
 
-        #         solution[max_idx].remove(transfer_point)
-        #         solution[min_idx].insert(-1, transfer_point)
+                solution[max_idx].remove(transfer_point)
+                solution[min_idx].insert(-1, transfer_point)
 
-        #         solution[max_idx] = optimize_route(solution[max_idx])
-        #         solution[min_idx] = optimize_route(solution[min_idx])
+                solution[max_idx] = optimize_route(solution[max_idx])
+                solution[min_idx] = optimize_route(solution[min_idx])
 
-        #         canonical_solution = canonical_form(solution)
-        #         if canonical_solution in tabu_set:
-        #             # Hoàn nguyên
-        #             solution[min_idx].remove(transfer_point)
-        #             solution[max_idx].insert(vertex, transfer_point)
-        #             continue
+                canonical_solution = canonical_form(solution)
+                if canonical_solution in tabu_set:
+                    # Hoàn nguyên
+                    solution[min_idx].remove(transfer_point)
+                    solution[max_idx].insert(vertex, transfer_point)
+                    continue
 
-        #     times = calculate_total_time(solution)
-        #     if max(times) < best_times_val:
-        #         best_solution = [route[:] for route in solution]
-        #         best_times = times
-        #         best_times_val = max(times)
-        #         canonical_best = canonical_form(best_solution)
-        #         tabu_list.append(canonical_best)
-        #         tabu_set.add(canonical_best)
-        #         length_tabu += 1
-        #     if length_tabu >= 10000:
-        #         oldest = tabu_list.popleft()
-        #         tabu_set.remove(oldest)
-        #         length_tabu -= 1
+            times = calculate_total_time(solution)
+            if max(times) < best_times_val:
+                best_solution = [route[:] for route in solution]
+                best_times = times
+                best_times_val = max(times)
+                canonical_best = canonical_form(best_solution)
+                tabu_list.append(canonical_best)
+                tabu_set.add(canonical_best)
+                length_tabu += 1
+            if length_tabu >= 10000:
+                oldest = tabu_list.popleft()
+                tabu_set.remove(oldest)
+                length_tabu -= 1
 
         else:
             max_idx, min_idx = sorted_times[random.randint(
-                int(k/3),  int(k/2))][0], sorted_times[random.randint(
+                0,  int(k/2))][0], sorted_times[random.randint(
                     int(k/1.4), k-1)][0]
 
             temp_length = len(solution[max_idx])
@@ -245,10 +247,15 @@ def tabu_search(solution, max_iter=60000):
                 tabu_set.remove(oldest)
                 length_tabu -= 1
 
+    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+
+    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
     return best_solution, best_times
 
 
-initial_solution = initialize_solution_3_random(n, k)
+initial_solution = initialize_solution_2(n, k)
+print(initial_solution)
+# print(max(calculate_total_time(initial_solution)))
 optimized_solution, optimized_times = tabu_search(initial_solution)
 print("Total Times:", max(optimized_times))
 
