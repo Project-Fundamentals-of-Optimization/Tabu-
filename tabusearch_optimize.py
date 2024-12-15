@@ -6,7 +6,7 @@ import time
 
 start_time = time.time()
 
-# file_path = "input/input100.txt"
+# file_path = "input/input20010.txt"
 
 # # Đọc file và xử lý dữ liệu
 # with open(file_path, "r") as f:
@@ -273,13 +273,15 @@ def optimize_route_D(nodes):
 
     return path
 
+dc = n/k
 def optimize_route_E(nodes):
+    import math
     """
     fore sight k step
     combine with 
     top - k
     """
-    top_remain = 5
+    top_remain = int(5/max(1,math.log10(dc)))
     n = len(nodes)
     nodes = [0] + nodes
     # init = sum([d[node] for node in nodes])
@@ -290,7 +292,7 @@ def optimize_route_E(nodes):
     path = [0]
 
     def foresight(i,is_,old_length):
-        forestep=5
+        forestep=int(5/max(1,math.log10(dc)))
         length = new_distance[path[-1]][i]
         foresight_length = old_length+new_distance[path[-1]][i]
         # distance_matrix
@@ -351,46 +353,6 @@ def optimize_route_E(nodes):
     # print("uncvt",path)
     return [nodes[i] for i in path[1:]]
     
-
-
-# def optimize_route_B(nodes):
-#     top_remain = 300
-#     top_k = 2
-#     # print(nodes)
-#     n = len(nodes)
-#     nodes = [0]+nodes
-#     init = sum([d[node] for node in nodes])
-#     new_distance = [[distance_matrix[nodes[i]][nodes[j]] for i in range(len(nodes))]for j in range(len(nodes))]
-#     is_ = [0 for _ in range(n+1)]
-#     is_[0]=1
-    
-#     paths = [[is_[:],init,[0]]]
-#     new_paths = []
-    
-#     que = [None,None]
-#     def push(p): #p = [mask,length,path]
-#         if que[0]==None or que[0][1]>p[1]:
-#             que[0],que[1] = p,que[0]
-#         elif que[1]==None or que[1][1]>p[1]:
-#             que[1]=p
-#     for iter in range(len(nodes[1:])):
-#         for mask,old_length,path in paths:
-#             que = [None,None]
-#             for i in range(1,n+1):
-#                 if mask[i]==0:
-#                     mask[i]=1
-#                     push([mask[:],old_length-new_distance[path[-1]][0]+new_distance[path[-1]][i]+new_distance[i][0],(path+[i])[:]])
-#                     mask[i]=0
-#             # print(que)
-#             if que[-1]==None:que=que[:-1]
-#             if que[-1]==None:que=que[:-1]
-#             new_paths.extend(que)
-#         new_paths = sorted(new_paths,key=lambda p:p[1],reverse=False)
-#         paths = new_paths[:top_remain]   
-#         new_paths = [] 
-#     path = paths[0][-1]
-#     print("siuuuuu",paths[0][1])
-#     return [nodes[i] for i in path[1:]]
 cnt=0
 sumssss = 0
 improvement = 0
@@ -399,7 +361,7 @@ def optimize_route(nodes):
     sumssss+=1
     pathA = optimize_route_A(nodes)
     costA = calculate_route_time(pathA)
-    pathB = optimize_route_E(nodes)
+    pathB = optimize_route_C(nodes)
     costB = calculate_route_time(pathB)
     improvement +=costB - costA
     if costA<costB:
@@ -501,8 +463,12 @@ def tabu_search(solution, max_iter=10000):
                 length_tabu -= 1
 
         elif prop < 0.9:
-            max_idx, min_idx = sorted_times[random.randint(
-                2, int(k/2))][0], sorted_times[random.randint(int(k/2) + 1, k-1)][0]
+            # print(k//2)
+            if k>2:
+                max_idx, min_idx = sorted_times[random.randint(
+                    2, k//2)][0], sorted_times[random.randint(int(k/2) + 1, k-1)][0]
+            else:
+                max_idx,min_idx = 0,1
 
             temp_length = len(solution[max_idx])
             if temp_length >= 1:
@@ -537,18 +503,22 @@ def tabu_search(solution, max_iter=10000):
                 length_tabu -= 1
 
         else:
-            max_idx, min_idx = sorted_times[random.randint(
-                0,  int(k/2))][0], sorted_times[random.randint(
-                    int(k/1.4), k-1)][0]
 
+            if k>2:
+                max_idx, min_idx = sorted_times[random.randint(
+                    0,  int(k/2))][0], sorted_times[random.randint(
+                        int(k/1.4), k-1)][0]
+                # max_idx, min_idx = sorted_times[random.randint(
+                #     2, k//2)][0], sorted_times[random.randint(int(k/2) + 1, k-1)][0]
+                # print(max_idx,min_idx)
+                # if max_idx>min_idx:min_idx = max_idx+1
+            else:
+                max_idx,min_idx = 0,1
             temp_length = len(solution[max_idx])
             if temp_length >= 1:
                 vertex = random.randint(0, temp_length - 1)
-                transfer_point = solution[max_idx][vertex]
-
                 # just swap
-                old_val = solution[min_idx][-1]
-                solution[max_idx][vertex], solution[min_idx][-1] = old_val, transfer_point
+                solution[max_idx][vertex], solution[min_idx][-1] = solution[min_idx][-1], solution[max_idx][vertex]
 
                 solution[max_idx] = optimize_route(solution[max_idx])
                 solution[min_idx] = optimize_route(solution[min_idx])
@@ -556,7 +526,7 @@ def tabu_search(solution, max_iter=10000):
                 canonical_solution = canonical_form(solution)
                 if canonical_solution in tabu_set:
                     # Hoàn nguyên
-                    solution[max_idx][vertex], solution[min_idx][-1] = transfer_point, old_val
+                    solution[max_idx][vertex], solution[min_idx][-1] = solution[min_idx][-1], solution[max_idx][vertex]
                     continue
 
             times = calculate_total_time(solution)
@@ -584,9 +554,10 @@ def tabu_search(solution, max_iter=10000):
 initial_solution = initialize_solution_2(n, k)
 # print(initial_solution)
 optimized_solution, optimized_times = tabu_search(initial_solution)
+print(k)
 for sol in optimized_solution:
     print(len(sol)+2)
-    print(*sol)
+    print(*([0]+sol+[0]))
 # print(max(calculate_total_time(optimized_solution)))
 
 # print("Total Times:", max(optimized_times))
