@@ -7,38 +7,38 @@ import math
 
 start_time = time.time()
 
-file_path = "data.txt"
-
-# Đọc file và xử lý dữ liệu
-with open(file_path, "r") as f:
-    # Đọc dòng 1: chứa N và K
-    first_line = f.readline().strip()
-    n, k = map(int, first_line.split())
-
-    # Đọc dòng 2: chứa d(1), d(2), ..., d(N)
-    second_line = f.readline().strip()
-    d = [0] + list(map(int, second_line.split()))
-
-    # Đọc các dòng tiếp theo: ma trận t
-    distance_matrix = []
-    for _ in range(n+1):
-        row = list(map(int, f.readline().strip().split()))
-        distance_matrix.append(row)
+# file_path = "data.txt"
 
 # # Đọc file và xử lý dữ liệu
+# with open(file_path, "r") as f:
 #     # Đọc dòng 1: chứa N và K
-# first_line = input()
-# n, k = map(int, first_line.split())
+#     first_line = f.readline().strip()
+#     n, k = map(int, first_line.split())
 
-# # Đọc dòng 2: chứa d(1), d(2), ..., d(N)
-# second_line = input()
-# d = [0] + list(map(int, second_line.split()))
+#     # Đọc dòng 2: chứa d(1), d(2), ..., d(N)
+#     second_line = f.readline().strip()
+#     d = [0] + list(map(int, second_line.split()))
 
-# # Đọc các dòng tiếp theo: ma trận t
-# distance_matrix = []
-# for _ in range(n+1):
-#     row = list(map(int, input().split()))
-#     distance_matrix.append(row)
+#     # Đọc các dòng tiếp theo: ma trận t
+#     distance_matrix = []
+#     for _ in range(n+1):
+#         row = list(map(int, f.readline().strip().split()))
+#         distance_matrix.append(row)
+
+# Đọc file và xử lý dữ liệu
+    # Đọc dòng 1: chứa N và K
+first_line = input()
+n, k = map(int, first_line.split())
+
+# Đọc dòng 2: chứa d(1), d(2), ..., d(N)
+second_line = input()
+d = [0] + list(map(int, second_line.split()))
+
+# Đọc các dòng tiếp theo: ma trận t
+distance_matrix = []
+for _ in range(n+1):
+    row = list(map(int, input().split()))
+    distance_matrix.append(row)
 
 
 ###############################################################
@@ -107,7 +107,7 @@ def initialize_solution_4(n,k):
         for i in range(u2):
             result[i]-= 1 if u2>0 else -1
         return result
-    u1 = [0]+ divide_n_into_k_parts(n,k,n/k-0.25*(n/k), n/k+0.25*(n/k))
+    u1 = [0]+ divide_n_into_k_parts(n,k,n/k-0.2*(n/k), n/k+0.2*(n/k))
     # print(u1)
     u2 = [i+1  for i in range(n)]
     random.shuffle(u2)
@@ -384,22 +384,8 @@ def canonical_form(solution):
 # def canonical_form(lst):
 #     return hash(tuple(sorted(tuple(sub) for sub in lst)))
 
-# def canonical_form(solution):
-#     p1 = 10888869450418352160768000001
-#     p2 = 3001
-#     res = 0
-#     p2_mod_p1 = p2 % p1  # Precompute p2 modulo p1
 
-#     for u in solution:
-#         for o in u:
-#             res = (res * p2_mod_p1 + o) % p1
-#         res = (res * p2_mod_p1 - p2_mod_p1) % p1  # Simplified expression
-
-#     return res
-
-
-
-def tabu_search(solution, max_iter=3000):
+def tabu_search(solution, max_iter=2000):
     # Thay vì chỉ dùng deque, ta dùng thêm set để kiểm tra nhanh
     tabu_list = deque()
     tabu_set = set()
