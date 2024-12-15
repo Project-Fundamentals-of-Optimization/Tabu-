@@ -9,7 +9,7 @@ import time
 start_time = time.time()
 
 
-file_path = "/mnt/c/Users/Admin/Desktop/code python/tabu_and_genetic_bản_đầu/data.txt"
+file_path = "data.txt"
 
 # Đọc file và xử lý dữ liệu
 with open(file_path, "r") as f:
@@ -27,26 +27,175 @@ with open(file_path, "r") as f:
         row = list(map(int, f.readline().strip().split()))
         distance_matrix.append(row)
 
-"""# khởi tạo trạng thái ban đầu"""
+# """# khởi tạo trạng thái ban đầu"""
+
+# Đọc file và xử lý dữ liệu
+    # Đọc dòng 1: chứa N và K
+# first_line = input()
+# n, k = map(int, first_line.split())
+
+# # Đọc dòng 2: chứa d(1), d(2), ..., d(N)
+# second_line = input()
+# d = [0] + list(map(int, second_line.split()))
+
+# # Đọc các dòng tiếp theo: ma trận t
+# distance_matrix = []
+# for _ in range(n+1):
+#     row = list(map(int, input().split()))
+#     distance_matrix.append(row)
 
 
 #########################################
 
-def optimize_route(route):
+def calculate_route_time(route):
+    route_temp = [0] + route + [0]
+    time_val = 0
+    for i in range(len(route_temp) - 1):
+        time_val += distance_matrix[route_temp[i]][route_temp[i + 1]]
+        time_val += d[route_temp[i + 1]]
+    return time_val
+
+def optimize_route_A(route):
     # Tham lam
-    optimized_route = ''
+    optimized_route = [0]
     remaining_points = route[:]
     current_point = 0
 
     while remaining_points:
         next_point = min(remaining_points,
                          key=lambda x: distance_matrix[current_point][x])
-        optimized_route += str(next_point) + ' '
+        # print(f"in normal opti",current_point,next_point,distance_matrix[current_point][next_point])
+        optimized_route.append(next_point)
         remaining_points.remove(next_point)
         current_point = next_point
 
-    return "0 " + optimized_route.strip() + " 0"
+    return optimized_route[1:]
 
+def optimize_route_C(nodes):
+    top_remain = 20
+    n = len(nodes)
+    nodes = [0]+nodes
+    init = sum([d[node] for node in nodes])
+    new_distance = [[distance_matrix[nodes[i]][nodes[j]] for i in range(len(nodes))]for j in range(len(nodes))]
+    is_ = [0 for _ in range(n+1)]
+    is_[0]=1
+    
+    paths = [[is_[:],init,[0]]]
+    new_paths = []
+    
+    que = [None,None]
+    def push(p): #p = [mask,length,path]
+        if que[0]==None or que[0][1]>p[1]:
+            que[0],que[1] = p,que[0]
+        elif que[1]==None or que[1][1]>p[1]:
+            que[1]=p
+    for _ in range(len(nodes[1:])):
+        for mask,old_length,path in paths:
+            que = [None,None]
+            for i in range(1,n+1):
+                if mask[i]==0:
+                    mask[i]=1
+                    push([mask[:],old_length+new_distance[path[-1]][i],(path+[i])[:]])
+                    mask[i]=0
+            if que[0] not in new_paths:new_paths.append(que[0])
+            if que[1] is not None and que[1] not in new_paths:new_paths.append(que[1])
+        new_paths = sorted(new_paths,key=lambda p:p[1],reverse=False)
+        paths = new_paths[:top_remain]   
+        new_paths = [] 
+    new_paths = [[_1,_2+new_distance[path[-1]][0],path] for _1,_2,path in new_paths]
+    new_paths = sorted(new_paths,key=lambda p:p[1],reverse=False)
+    path = paths[0][-1]
+    return [nodes[i] for i in path[1:]]
+
+dc = n/k
+def optimize_route_E(nodes):
+    import math
+    """
+    fore sight k step
+    combine with 
+    top - k
+    """
+    top_remain = 4
+    n = len(nodes)
+    nodes = [0] + nodes
+    # init = sum([d[node] for node in nodes])
+    init=0
+    new_distance = [[distance_matrix[nodes[i]][nodes[j]] for i in range(len(nodes))]for j in range(len(nodes))]
+    is_ = [0 for node in nodes]
+    is_[0] = 1
+    path = [0]
+
+    def foresight(i,is_,old_length):
+        forestep=25
+        length = new_distance[path[-1]][i]
+        foresight_length = old_length+new_distance[path[-1]][i]
+        # distance_matrix
+        foresight_path = [(nodes[path[-1]],old_length),(nodes[i],foresight_length)]
+        is_ = is_[:]
+        is_[i]=1
+        cur_node = i
+        next_node = -1
+        for _ in range(forestep):
+            next_node = min([i for i in range(len(nodes))],key=lambda x: 1e9 if is_[x]==1 else new_distance[cur_node][x])
+            is_[next_node] = 1
+            length+=new_distance[cur_node][next_node]
+            foresight_length+=new_distance[cur_node][next_node]
+            cur_node=next_node
+            foresight_path.append((nodes[cur_node],foresight_length))
+            if set(is_)==set([1]):
+                return length + new_distance[cur_node][0]
+        return length + (new_distance[cur_node][0] if set(is_)==set([1]) else 0)
+    length_and_foresight = 0
+    length = 0
+    paths = [[is_[:],length_and_foresight,[0],length]]
+    new_paths = []
+    
+    que = [None,None]
+    def push(p): #p = [mask,length,path]
+        if que[0]==None or que[0][1]>p[1]:
+            que[0],que[1] = p,que[0]
+        elif que[1]==None or que[1][1]>p[1]:
+            que[1]=p
+    for _ in range(len(nodes[1:])):
+        for mask,length_and_foresight ,path, old_length in paths:
+            que = [None,None]
+            for i in range(1,n+1):
+                if mask[i]==0:
+                    mask[i]=1
+                    push([mask[:],old_length+foresight(i,mask[:],old_length),(path+[i])[:],old_length+new_distance[path[-1]][i]])
+                    mask[i]=0
+            # print("U"*30)
+            # print(que)
+            if que[0] not in new_paths:new_paths.append(que[0])
+            if que[1] is not None and que[1] not in new_paths:new_paths.append(que[1])
+        new_paths = sorted(new_paths,key=lambda p:p[1],reverse=False)
+        paths = new_paths[:top_remain]
+        # print("I"*20)
+        paths_cvt = [[_1,_2,[nodes[i] for i in path],_3] for _1,_2,path,_3 in paths]
+        # print(paths_cvt)   
+        new_paths = [] 
+    new_paths = [[_1,_2+new_distance[path[-1]][0],path,_3] for _1,_2,path,_3 in new_paths]
+    new_paths = sorted(new_paths,key=lambda p:p[1],reverse=False)
+    path = paths[0][-2]
+    
+    # print("uncvt",path)
+    return [nodes[i] for i in path[1:]]
+
+def optimize_route(route):
+    rA = optimize_route_A(route)
+    rC = optimize_route_C(route)
+    cA = calculate_route_time(rA)
+    cC = calculate_route_time(rC)
+    # print(cA,rA)
+    # print(cC,rC)
+    if cA>cC: route = rC
+    else: route = rA
+    # print(route)
+    route = [0]+route+[0]
+    o = " ".join([str(i) for i in route])
+    # print(o[:-1])
+    # exit(0)
+    return o
 
 def generate_random_sequence4(n, k):
     k = k - 1
@@ -280,7 +429,7 @@ def make_love(top_g, K, PROP_LOVE):
                 new_state.append([p1[i], p2[i]][random.randint(0, 1)])
     elif prop < 0.7:
         vl_temp = len(p1)
-        index = random.randint(vl_temp/4, int(vl_temp/1.5))
+        index = random.randint(int(vl_temp/4), int(vl_temp/1.5))
         new_state = p1[:index] + p2[index:]
 
     elif prop < 0.8:
@@ -382,3 +531,4 @@ end_time = time.time()
 # In thời gian chạy
 print(f"Thời gian chạy: {end_time - start_time:.2f} giây")
 print("score" + str(-score))
+

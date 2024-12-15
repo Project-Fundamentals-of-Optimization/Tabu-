@@ -25,11 +25,26 @@ with open(file_path, "r") as f:
         row = list(map(int, f.readline().strip().split()))
         distance_matrix.append(row)
 
+# # Đọc file và xử lý dữ liệu
+#     # Đọc dòng 1: chứa N và K
+# first_line = input()
+# n, k = map(int, first_line.split())
+
+# # Đọc dòng 2: chứa d(1), d(2), ..., d(N)
+# second_line = input()
+# d = [0] + list(map(int, second_line.split()))
+
+# # Đọc các dòng tiếp theo: ma trận t
+# distance_matrix = []
+# for _ in range(n+1):
+#     row = list(map(int, input().split()))
+#     distance_matrix.append(row)
+
 
 ###############################################################
 
 
-def initialize_solution(n, k):
+def initialize_solution(n=n, k=k):
     solution = [[] for _ in range(k)]
 
     customers = list(range(1, n + 1))
@@ -59,7 +74,7 @@ def initialize_solution_2(n, k):
     return solution
 
 
-def initialize_solution_3_random(n, k):
+def initialize_solution_3_random(n=n, k=k):
     solution = [[] for _ in range(k)]
     customers = list(range(1, n + 1))
     remaining_customers = n - (3 * (k-1) + 2)
@@ -75,6 +90,37 @@ def initialize_solution_3_random(n, k):
         solution[random_index].append(customers[temp_i + v - 1])
 
     return solution
+
+def initialize_solution_4(n,k):
+    def divide_n_into_k_parts(n, k, a, b):
+        a,b= int(a),int(b)
+        # Check if the condition n is in range [k*a, k*b] is satisfied
+        if n < k * a or n > k * b:
+            raise ValueError(f"n must be in range [{k * a}, {k * b}]")
+
+        # Start with a base list where each element is a
+        result = [random.randint(a,b) for i in range(k)]
+        rem = sum(result)-n
+        # print(f"rem: {rem}")
+        u1,u2 =rem//k, rem%k
+        result = [int(i - u1) for i in result]
+        for i in range(u2):
+            result[i]-= 1 if u2>0 else -1
+        return result
+    u1 = [0]+ divide_n_into_k_parts(n,k,n/k-0.25*(n/k), n/k+0.25*(n/k))
+    # print(u1)
+    u2 = [i+1  for i in range(n)]
+    random.shuffle(u2)
+    for i in range(1,len(u1)):
+        u1[i]+=u1[i-1]
+    # print(u1)
+    u = [u2[u1[i]:u1[i+1]] for i in range(len(u1)-1)]
+    # print()
+    # print()
+    # print()
+    return u
+# print(initialize_solution_4(n,k))
+# exit(0)
 
 
 def calculate_route_time(route):
@@ -224,7 +270,7 @@ def optimize_route_E(nodes):
     combine with 
     top - k
     """
-    top_remain = int(5/max(1,math.log10(dc)))
+    top_remain = 4
     n = len(nodes)
     nodes = [0] + nodes
     # init = sum([d[node] for node in nodes])
@@ -235,7 +281,7 @@ def optimize_route_E(nodes):
     path = [0]
 
     def foresight(i,is_,old_length):
-        forestep=int(5/max(1,math.log10(dc)))
+        forestep=25
         length = new_distance[path[-1]][i]
         foresight_length = old_length+new_distance[path[-1]][i]
         # distance_matrix
@@ -294,17 +340,18 @@ cnt=0
 sumssss = 0
 improvement = 0
 def optimize_route(nodes):
-    global cnt,sumssss,improvement
-    sumssss+=1
-    pathA = optimize_route_A(nodes)
-    costA = calculate_route_time(pathA)
+    # global cnt,sumssss,improvement
+    # sumssss+=1
+    # pathA = optimize_route_A(nodes)
+    # costA = calculate_route_time(pathA)
     pathB = optimize_route_E(nodes)
-    costB = calculate_route_time(pathB)
-    improvement +=costB - costA
-    if costA<costB:
-        return pathA
-    cnt+=1
     return pathB
+    # costB = calculate_route_time(pathB)
+    # improvement +=costB - costA
+    # if costA<costB:
+    #     return pathA
+    # cnt+=1
+    # return pathB
 
 
 def calculate_total_time(solution):
@@ -315,8 +362,6 @@ def calculate_total_time(solution):
 ################################
 
 # chuẩn hóa dạng
-
-
 def canonical_form(solution):
     # Sắp xếp các route theo một tiêu chí bất kỳ. Ở đây: dựa trên điểm đầu tiên (nếu route rỗng thì đặt giá trị -1)
     sorted_routes = sorted(
@@ -325,8 +370,36 @@ def canonical_form(solution):
     canonical_solution = tuple(tuple(r) for r in sorted_routes)
     return canonical_solution
 
+def canonical_form(solution):
+    return hash(tuple(tuple(sorted(u)) for u in sorted(solution)))
+# def canonical_form(solution):
+#     p1 = 10888869450418352160768000001
+#     p2 = 3001
+#     res = 0
+#     for u in solution:
+#         for o in u:
+#             res =(res*p2+o)%p1
+#         res = (res*p2-p2)%p1
+#     return res
+# def canonical_form(lst):
+#     return hash(tuple(sorted(tuple(sub) for sub in lst)))
 
-def tabu_search(solution, max_iter=int(10000/math.log10(dc))):
+# def canonical_form(solution):
+#     p1 = 10888869450418352160768000001
+#     p2 = 3001
+#     res = 0
+#     p2_mod_p1 = p2 % p1  # Precompute p2 modulo p1
+
+#     for u in solution:
+#         for o in u:
+#             res = (res * p2_mod_p1 + o) % p1
+#         res = (res * p2_mod_p1 - p2_mod_p1) % p1  # Simplified expression
+
+#     return res
+
+
+
+def tabu_search(solution, max_iter=3000):
     # Thay vì chỉ dùng deque, ta dùng thêm set để kiểm tra nhanh
     tabu_list = deque()
     tabu_set = set()
@@ -335,6 +408,7 @@ def tabu_search(solution, max_iter=int(10000/math.log10(dc))):
     best_times = calculate_total_time(best_solution)
     best_times_val = max(best_times)
     length_tabu = 0
+
     for iteration in range(max_iter):
         prop = random.random()
         times = calculate_total_time(solution)
@@ -345,23 +419,21 @@ def tabu_search(solution, max_iter=int(10000/math.log10(dc))):
             max_idx, min_idx = sorted_times[0][0], sorted_times[-1][0]
             temp_length = len(solution[max_idx])
             if temp_length >= 1:
+                backupmin,backupmax = solution[min_idx][:],solution[max_idx][:]
                 vertex = random.randint(0, temp_length - 1)
-                transfer_point = solution[max_idx][vertex]
-
-                solution[max_idx].remove(transfer_point)
-                solution[min_idx].insert(-1, transfer_point)
+                fullmax = [0]+solution[max_idx]+[0]
+                vertex = max([i for i in range(1,temp_length)], key = lambda p: distance_matrix[fullmax[p-1]][fullmax[p]]+distance_matrix[fullmax[p]][fullmax[p+1]]+d[fullmax[p]])
+                solution[min_idx].append(solution[max_idx].pop(vertex-1))
 
                 # Tối ưu lại lộ trình sau khi chuyển giao
                 solution[max_idx] = optimize_route(solution[max_idx])
                 solution[min_idx] = optimize_route(solution[min_idx])
 
                 # Chuẩn hóa lời giải hiện tại
-                canonical_solution = canonical_form(solution)
-                if canonical_solution in tabu_set:
-                    # Hoàn nguyên nếu muốn, ở đây có thể bỏ qua move
+                # canonical_solution = canonical_form(solution)
+                if canonical_form(solution) in tabu_set:
                     # Hoàn nguyên
-                    solution[min_idx].remove(transfer_point)
-                    solution[max_idx].insert(vertex, transfer_point)
+                    solution[min_idx],solution[max_idx] = backupmin,backupmax
                     continue
 
             times = calculate_total_time(solution)
@@ -379,26 +451,25 @@ def tabu_search(solution, max_iter=int(10000/math.log10(dc))):
                 tabu_set.remove(oldest)
                 length_tabu -= 1
 
+
         elif prop < 0.9:
-            max_idx, min_idx = sorted_times[random.randint(
-                2, int(k/2))][0], sorted_times[random.randint(int(k/2) + 1, k-1)][0]
+            if k>2:
+                max_idx, min_idx = sorted_times[random.randint(
+                    2, int(k/2))][0], sorted_times[random.randint(int(k/2) + 1, k-1)][0]
+            else: max_idx,min_idx = 0,1
 
             temp_length = len(solution[max_idx])
-            if temp_length >= 1:
+            if temp_length > 1:
+                backupmin,backupmax = solution[min_idx][:],solution[max_idx][:]
                 vertex = random.randint(0, temp_length - 1)
-                transfer_point = solution[max_idx][vertex]
-
-                solution[max_idx].remove(transfer_point)
-                solution[min_idx].insert(-1, transfer_point)
-
+                solution[min_idx].append(solution[max_idx].pop(vertex))
+                # Tối ưu lại lộ trình sau khi chuyển giao
                 solution[max_idx] = optimize_route(solution[max_idx])
                 solution[min_idx] = optimize_route(solution[min_idx])
-
-                canonical_solution = canonical_form(solution)
-                if canonical_solution in tabu_set:
+                # Chuẩn hóa lời giải hiện tại
+                if canonical_form(solution) in tabu_set:
                     # Hoàn nguyên
-                    solution[min_idx].remove(transfer_point)
-                    solution[max_idx].insert(vertex, transfer_point)
+                    solution[min_idx], solution[max_idx] = backupmin,backupmax
                     continue
 
             times = calculate_total_time(solution)
@@ -416,27 +487,28 @@ def tabu_search(solution, max_iter=int(10000/math.log10(dc))):
                 length_tabu -= 1
 
         else:
-            max_idx, min_idx = sorted_times[random.randint(
-                0,  int(k/2))][0], sorted_times[random.randint(
-                    int(k/1.4), k-1)][0]
+            if k>2:
+                max_idx, min_idx = sorted_times[random.randint(
+                    0,  int(k/2))][0], sorted_times[random.randint(
+                        int(k/1.4), k-1)][0]
+            else: max_idx, min_idx = 0,1
+            if min_idx == max_idx: exit(3)
 
             temp_length = len(solution[max_idx])
             if temp_length >= 1:
+                temp1,temp2 = solution[min_idx][:],solution[max_idx][:]
                 vertex = random.randint(0, temp_length - 1)
-                transfer_point = solution[max_idx][vertex]
-
-                # just swap
-                old_val = solution[min_idx][-1]
-                solution[max_idx][vertex], solution[min_idx][-1] = old_val, transfer_point
-
+                #move
+                solution[min_idx].append(solution[max_idx].pop(vertex))
                 solution[max_idx] = optimize_route(solution[max_idx])
                 solution[min_idx] = optimize_route(solution[min_idx])
 
-                canonical_solution = canonical_form(solution)
-                if canonical_solution in tabu_set:
+                # canonical_solution = canonical_form(solution)
+                if canonical_form(solution) in tabu_set:
                     # Hoàn nguyên
-                    solution[max_idx][vertex], solution[min_idx][-1] = transfer_point, old_val
+                    solution[max_idx], solution[min_idx] = temp2,temp1
                     continue
+
 
             times = calculate_total_time(solution)
             if max(times) < best_times_val:
@@ -447,18 +519,16 @@ def tabu_search(solution, max_iter=int(10000/math.log10(dc))):
                 tabu_list.append(canonical_best)
                 tabu_set.add(canonical_best)
                 length_tabu += 1
+
             if length_tabu >= 10000:
                 oldest = tabu_list.popleft()
                 tabu_set.remove(oldest)
                 length_tabu -= 1
 
-    # print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-
-    # print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
     return best_solution, best_times
 
 
-initial_solution = initialize_solution(n, k)
+initial_solution = initialize_solution_4(n, k)
 # print(initial_solution)
 # print(max(calculate_total_time(initial_solution)))
 optimized_solution, optimized_times = tabu_search(initial_solution)
