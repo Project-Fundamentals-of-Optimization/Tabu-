@@ -7,7 +7,7 @@ import math
 
 start_time = time.time()
 
-file_path = "input/input100.txt"
+file_path = "input/input700.txt"
 
 # Đọc file và xử lý dữ liệu
 with open(file_path, "r") as f:
