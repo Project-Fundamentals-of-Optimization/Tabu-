@@ -7,38 +7,38 @@ import math
 
 start_time = time.time()
 
-# file_path = "data.txt"
+file_path = "input/input100.txt"
 
-# # Đọc file và xử lý dữ liệu
-# with open(file_path, "r") as f:
-#     # Đọc dòng 1: chứa N và K
-#     first_line = f.readline().strip()
-#     n, k = map(int, first_line.split())
+# Đọc file và xử lý dữ liệu
+with open(file_path, "r") as f:
+    # Đọc dòng 1: chứa N và K
+    first_line = f.readline().strip()
+    n, k = map(int, first_line.split())
 
-#     # Đọc dòng 2: chứa d(1), d(2), ..., d(N)
-#     second_line = f.readline().strip()
-#     d = [0] + list(map(int, second_line.split()))
+    # Đọc dòng 2: chứa d(1), d(2), ..., d(N)
+    second_line = f.readline().strip()
+    d = [0] + list(map(int, second_line.split()))
 
-#     # Đọc các dòng tiếp theo: ma trận t
-#     distance_matrix = []
-#     for _ in range(n+1):
-#         row = list(map(int, f.readline().strip().split()))
-#         distance_matrix.append(row)
+    # Đọc các dòng tiếp theo: ma trận t
+    distance_matrix = []
+    for _ in range(n+1):
+        row = list(map(int, f.readline().strip().split()))
+        distance_matrix.append(row)
 
 # Đọc file và xử lý dữ liệu
     # Đọc dòng 1: chứa N và K
-first_line = input()
-n, k = map(int, first_line.split())
+# first_line = input()
+# n, k = map(int, first_line.split())
 
-# Đọc dòng 2: chứa d(1), d(2), ..., d(N)
-second_line = input()
-d = [0] + list(map(int, second_line.split()))
+# # Đọc dòng 2: chứa d(1), d(2), ..., d(N)
+# second_line = input()
+# d = [0] + list(map(int, second_line.split()))
 
-# Đọc các dòng tiếp theo: ma trận t
-distance_matrix = []
-for _ in range(n+1):
-    row = list(map(int, input().split()))
-    distance_matrix.append(row)
+# # Đọc các dòng tiếp theo: ma trận t
+# distance_matrix = []
+# for _ in range(n+1):
+#     row = list(map(int, input().split()))
+#     distance_matrix.append(row)
 
 
 ###############################################################
@@ -514,16 +514,23 @@ def tabu_search(solution, max_iter=2000):
     return best_solution, best_times
 
 
-initial_solution = initialize_solution_4(n, k)
-# print(initial_solution)
-# print(max(calculate_total_time(initial_solution)))
-optimized_solution, optimized_times = tabu_search(initial_solution)
-print(k)
-for sol in optimized_solution:
-    print(len(sol)+2)
-    print(*([0]+sol+[0]))
-print("Total Times:", max(optimized_times))
+list_of_ans = []
+from time import perf_counter
+for i in range(50):
+    tin = perf_counter()
+    initial_solution = initialize_solution_4(n, k)
+    # print(initial_solution)
+    # print(max(calculate_total_time(initial_solution)))
+    optimized_solution, optimized_times = tabu_search(initial_solution)
+    list_of_ans.append(max(optimized_times))
+    print(f"iter {i} of {file_path}: in {perf_counter()-tin:.2f}s")
+print(list_of_ans)
+# print(k)
+# for sol in optimized_solution:
+#     print(len(sol)+2)
+#     print(*([0]+sol+[0]))
+# print("Total Times:", max(optimized_times))
 
-print("***********************************************")
-end_time = time.time()
-print(f"Thời gian chạy: {end_time - start_time:.2f} giây")
+# print("***********************************************")
+# end_time = time.time()
+# print(f"Thời gian chạy: {end_time - start_time:.2f} giây")
