@@ -6,7 +6,7 @@ import time
 
 start_time = time.time()
 
-# file_path = "input/input20010.txt"
+file_path = "input/input20010.txt"
 
 # # Đọc file và xử lý dữ liệu
 # with open(file_path, "r") as f:
@@ -309,13 +309,7 @@ def optimize_route_E(nodes):
             cur_node=next_node
             foresight_path.append((nodes[cur_node],foresight_length))
             if set(is_)==set([1]):
-                # print("#"*40)
-                # print(f"try compute foresight from {nodes[path[-1]]} to {nodes[i]}: fore {foresight_path}, real {length}, old {old_length}")
-                # print("satisfy the condition")
                 return length + new_distance[cur_node][0]
-        # print("#"*40)
-        # print(f"try compute foresight from {nodes[path[-1]]} to {nodes[i]}: fore {foresight_path}, real {length}, old {old_length}")
-        # if set(is_)==set([1]):print("satisfy the condition")
         return length + (new_distance[cur_node][0] if set(is_)==set([1]) else 0)
     length_and_foresight = 0
     length = 0
@@ -361,18 +355,13 @@ def optimize_route(nodes):
     sumssss+=1
     pathA = optimize_route_A(nodes)
     costA = calculate_route_time(pathA)
-    pathB = optimize_route_C(nodes)
+    pathB = optimize_route_E(nodes)
     costB = calculate_route_time(pathB)
     improvement +=costB - costA
     if costA<costB:
         return pathA
     cnt+=1
     return pathB
-    # print(uA:=optimize_route_A(nodes),uA:=calculate_route_time(uA))
-    # print("^"*80)
-    # print(uB:=optimize_route_E(nodes),uB:=calculate_route_time(uB))
-    # if uA<uB: print(f"okkkkkkkkk: uA {uA}, uB {uB}")
-    # exit(0)
 
 
 def calculate_total_time(solution):
@@ -402,9 +391,9 @@ def canonical_form(solution):
     # Chuyển mỗi route thành tuple (immutable) để có thể băm (hash)
     canonical_solution = tuple(tuple(r) for r in sorted_routes)
     return canonical_solution
-
-
-def tabu_search(solution, max_iter=10000):
+import math
+def tabu_search(solution, max_iter=int(10000/math.log10(dc))):
+    # print(max_iter,dc)
     # Thay vì chỉ dùng deque, ta dùng thêm set để kiểm tra nhanh
     tabu_list = deque()
     tabu_set = set()
