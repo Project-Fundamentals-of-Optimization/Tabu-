@@ -97,17 +97,39 @@ def generate_random_sequence_all(n, k):
     return sequence
 
 
+def generate_random_sequence_special(n, k):
+    solution = []
+    n_temp = n
+    remain_worker = k
+    mark = 0
+    worker = 0
+    while remain_worker > 1:
+
+        length = random.randint(1, n_temp - remain_worker)
+        solution += [worker] * length
+
+        # update
+        worker += 1
+        n_temp -= length
+        remain_worker -= 1
+        mark += length
+
+    solution += [worker] * n_temp
+
+    random.shuffle(solution)
+    return solution
+
+
 def gen_state(n):
     prop = random.random()
     if n > 30:
-        if prop < 0.05:
-            state = generate_random_sequence_all(n, k)
-        elif prop < 0.47:
+        if prop < 0.02:
             state = generate_random_sequence6(n, k)
-        elif prop < 0.9:
+        elif prop < 0.4:
             state = generate_random_sequence4(n, k)
         else:
-            state = generate_random_sequence1(n, k)
+            state = generate_random_sequence_special(n, k)
+
     else:
         if prop < 0.33:
             state = generate_random_sequence_all(n, k)
