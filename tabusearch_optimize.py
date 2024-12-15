@@ -7,7 +7,7 @@ import math
 
 start_time = time.time()
 
-file_path = "input/input100.txt"
+file_path = "input/input1000.txt"
 
 # Đọc file và xử lý dữ liệu
 with open(file_path, "r") as f:
@@ -270,7 +270,7 @@ def optimize_route_E(nodes):
     combine with 
     top - k
     """
-    top_remain = 4
+    top_remain = 10
     n = len(nodes)
     nodes = [0] + nodes
     # init = sum([d[node] for node in nodes])
@@ -281,7 +281,7 @@ def optimize_route_E(nodes):
     path = [0]
 
     def foresight(i,is_,old_length):
-        forestep=25
+        forestep=7
         length = new_distance[path[-1]][i]
         foresight_length = old_length+new_distance[path[-1]][i]
         # distance_matrix
@@ -336,22 +336,24 @@ def optimize_route_E(nodes):
     # print("uncvt",path)
     return [nodes[i] for i in path[1:]]
     
-cnt=0
+cnt = 0
 sumssss = 0
 improvement = 0
+opti_name = None
+
 def optimize_route(nodes):
-    # global cnt,sumssss,improvement
-    # sumssss+=1
-    # pathA = optimize_route_A(nodes)
-    # costA = calculate_route_time(pathA)
+    global cnt, sumssss, improvement,opti_name
+    sumssss += 1
+    pathA = optimize_route_A(nodes)
+    costA = calculate_route_time(pathA)
     pathB = optimize_route_E(nodes)
+    costB = calculate_route_time(pathB)
+    opti_name = "E"
+    improvement += costB - costA
+    if costA < costB:
+        return pathA
+    cnt += 1
     return pathB
-    # costB = calculate_route_time(pathB)
-    # improvement +=costB - costA
-    # if costA<costB:
-    #     return pathA
-    # cnt+=1
-    # return pathB
 
 
 def calculate_total_time(solution):
@@ -385,7 +387,7 @@ def canonical_form(solution):
 #     return hash(tuple(sorted(tuple(sub) for sub in lst)))
 
 
-def tabu_search(solution, max_iter=2000):
+def tabu_search(solution, max_iter=2002):
     # Thay vì chỉ dùng deque, ta dùng thêm set để kiểm tra nhanh
     tabu_list = deque()
     tabu_set = set()
@@ -510,6 +512,9 @@ def tabu_search(solution, max_iter=2000):
                 oldest = tabu_list.popleft()
                 tabu_set.remove(oldest)
                 length_tabu -= 1
+        if iteration%1000==0 and iteration:
+            print(f"epoch {iteration} in {perf_counter()-tin:.4f}s with rate {cnt/sumssss:.2f} and improvement {improvement/sumssss:.2f} with optimize {opti_name}")
+
 
     return best_solution, best_times
 
