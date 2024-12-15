@@ -9,7 +9,7 @@ import time
 start_time = time.time()
 
 
-file_path = "/mnt/c/Users/Admin/Desktop/code python/tabu_and_genetic_bản_đầu/data.txt"
+file_path = "input/input100.txt"
 
 # Đọc file và xử lý dữ liệu
 with open(file_path, "r") as f:

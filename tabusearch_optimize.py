@@ -6,28 +6,39 @@ import time
 
 start_time = time.time()
 
-file_path = "input/input100.txt"
+# file_path = "input/input100.txt"
+
+# # Đọc file và xử lý dữ liệu
+# with open(file_path, "r") as f:
+#     # Đọc dòng 1: chứa N và K
+#     first_line = f.readline().strip()
+#     n, k = map(int, first_line.split())
+
+#     # Đọc dòng 2: chứa d(1), d(2), ..., d(N)
+#     second_line = f.readline().strip()
+#     d = [0] + list(map(int, second_line.split()))
+
+#     # Đọc các dòng tiếp theo: ma trận t
+#     distance_matrix = []
+#     for _ in range(n+1):
+#         row = list(map(int, f.readline().strip().split()))
+#         distance_matrix.append(row)
+
 
 # Đọc file và xử lý dữ liệu
-with open(file_path, "r") as f:
     # Đọc dòng 1: chứa N và K
-    first_line = f.readline().strip()
-    n, k = map(int, first_line.split())
+first_line = input()
+n, k = map(int, first_line.split())
 
-    # Đọc dòng 2: chứa d(1), d(2), ..., d(N)
-    second_line = f.readline().strip()
-    d = [0] + list(map(int, second_line.split()))
+# Đọc dòng 2: chứa d(1), d(2), ..., d(N)
+second_line = input()
+d = [0] + list(map(int, second_line.split()))
 
-    # Đọc các dòng tiếp theo: ma trận t
-    distance_matrix = []
-    for _ in range(n+1):
-        row = list(map(int, f.readline().strip().split()))
-        distance_matrix.append(row)
-    
-    # for i in range(n+1):
-    #     for j in range(n+1):
-    #         for K in range(n+1):
-    #             distance_matrix[j][K]=min(distance_matrix[j][K],distance_matrix[j][i]+distance_matrix[i][K])
+# Đọc các dòng tiếp theo: ma trận t
+distance_matrix = []
+for _ in range(n+1):
+    row = list(map(int, input().split()))
+    distance_matrix.append(row)
 
 ###############################################################
 # print(cnt)
@@ -81,25 +92,17 @@ def initialize_solution_3_random(n, k):
 
 
 def calculate_route_time(route):
-    # route_temp = [0] + route + [0]
-    # time_val = 0
-    # for i in range(len(route_temp) - 1):
-    #     time_val += d[route_temp[i + 1]]
-
-    # for i in range(len(route_temp) - 1):
-    #     time_val += distance_matrix[route_temp[i]][route_temp[i + 1]]
-    #     print(time_val, end=" ")
-    # print()
-    # return time_val
-    route_temp = [0] + route
+    # print("%"*20)
+    # print(route)
+    route_temp = [0] + route + [0]
     time_val = 0
+    
+    for i in range(1,len(route_temp)):
+        time_val += distance_matrix[route_temp[i-1]][route_temp[i]]
+    #     print(f"({time_val},{distance_matrix[route_temp[i-1]][route_temp[i]]} from {route_temp[i-1]} to {route_temp[i]})", end=" ")
+    # print()
     for i in range(len(route_temp) - 1):
         time_val += d[route_temp[i + 1]]
-
-    for i in range(1,len(route_temp)):
-        time_val += distance_matrix[route_temp[i-1]][route_temp[i]]+distance_matrix[route_temp[i]][0]-distance_matrix[route_temp[i-1]][0]
-    #     print(f"({time_val},{route_temp[i-1],route_temp[i]},{route_temp[i],0},-{route_temp[i-1],0},{distance_matrix[route_temp[i-1]][route_temp[i]]+distance_matrix[route_temp[i]][0]-distance_matrix[route_temp[i-1]][0]})", end=" ")
-    # print()
     return time_val
 
 
@@ -162,7 +165,6 @@ def optimize_route_B(nodes):
     # print("siuuuuu",paths[0][1])
     return [nodes[i] for i in path[1:]]
 
-
 def optimize_route_C(nodes):
     top_remain = 20
     n = len(nodes)
@@ -199,12 +201,46 @@ def optimize_route_C(nodes):
     path = paths[0][-1]
     return [nodes[i] for i in path[1:]]
 
-
-
+def optimize_route_C_1(nodes):
+    top_remain = 20
+    n = len(nodes)
+    nodes = [0]+nodes
+    init = sum([d[node] for node in nodes])
+    new_distance = [[distance_matrix[nodes[i]][nodes[j]] for i in range(len(nodes))]for j in range(len(nodes))]
+    is_ = [0 for _ in range(n+1)]
+    is_[0]=1
+    
+    paths = [[is_[:],init,[0]]]
+    new_paths = []
+    
+    que = [None,None]
+    def push(p): #p = [mask,length,path]
+        if que[0]==None or que[0][1]>p[1]:
+            que[0],que[1] = p,que[0]
+        elif que[1]==None or que[1][1]>p[1]:
+            que[1]=p
+    for _ in range(len(nodes[1:])):
+        for mask,old_length,path in paths:
+            que = [None,None]
+            for i in range(1,n+1):
+                if mask[i]==0:
+                    mask[i]=1
+                    # push([mask[:],old_length+new_distance[path[-1]][i],(path+[i])[:]])
+                    new_paths.append([mask[:],old_length+new_distance[path[-1]][i],(path+[i])[:]])
+                    mask[i]=0
+            # if que[0] not in new_paths:new_paths.append(que[0])
+            # if que[1] is not None and que[1] not in new_paths:new_paths.append(que[1])
+        new_paths = sorted(new_paths,key=lambda p:p[1],reverse=False)
+        paths = new_paths[:top_remain]   
+        new_paths = [] 
+    new_paths = [[_1,_2+new_distance[path[-1]][0],path] for _1,_2,path in new_paths]
+    new_paths = sorted(new_paths,key=lambda p:p[1],reverse=False)
+    path = paths[0][-1]
+    return [nodes[i] for i in path[1:]]
 
 def optimize_route_D(nodes):
     """
-    fore sight 3 step
+    fore sight k step
     """
     n = len(nodes)
     nodes = [0] + nodes
@@ -214,7 +250,6 @@ def optimize_route_D(nodes):
     path = [0]
 
     def foresight(i,is_):
-        # print(f"foresght for {path[-1]} with i {i} with mask {is_}")
         forestep=10
         length = new_distance[path[-1]][i]
         is_ = is_[:]
@@ -223,17 +258,11 @@ def optimize_route_D(nodes):
         next_node = -1
         for _ in range(forestep):
             next_node = min([i for i in range(len(nodes))],key=lambda x: 1e9 if is_[x]==1 else new_distance[cur_node][x])
-            # print(i,next_node)
-            # print(i,is_)
-
-            # exit(0)
             is_[next_node] = 1
             length+=new_distance[cur_node][next_node]
             cur_node=next_node
             if set(is_)==set([1]):
                 return length
-            # print(f"end of {_} step")
-        # print(f"in foresight",i, cur_node, next_node, length)
         return length
 
     for iter in range(n):
@@ -244,6 +273,84 @@ def optimize_route_D(nodes):
 
     return path
 
+def optimize_route_E(nodes):
+    """
+    fore sight k step
+    combine with 
+    top - k
+    """
+    top_remain = 5
+    n = len(nodes)
+    nodes = [0] + nodes
+    # init = sum([d[node] for node in nodes])
+    init=0
+    new_distance = [[distance_matrix[nodes[i]][nodes[j]] for i in range(len(nodes))]for j in range(len(nodes))]
+    is_ = [0 for node in nodes]
+    is_[0] = 1
+    path = [0]
+
+    def foresight(i,is_,old_length):
+        forestep=5
+        length = new_distance[path[-1]][i]
+        foresight_length = old_length+new_distance[path[-1]][i]
+        # distance_matrix
+        foresight_path = [(nodes[path[-1]],old_length),(nodes[i],foresight_length)]
+        is_ = is_[:]
+        is_[i]=1
+        cur_node = i
+        next_node = -1
+        for _ in range(forestep):
+            next_node = min([i for i in range(len(nodes))],key=lambda x: 1e9 if is_[x]==1 else new_distance[cur_node][x])
+            is_[next_node] = 1
+            length+=new_distance[cur_node][next_node]
+            foresight_length+=new_distance[cur_node][next_node]
+            cur_node=next_node
+            foresight_path.append((nodes[cur_node],foresight_length))
+            if set(is_)==set([1]):
+                # print("#"*40)
+                # print(f"try compute foresight from {nodes[path[-1]]} to {nodes[i]}: fore {foresight_path}, real {length}, old {old_length}")
+                # print("satisfy the condition")
+                return length + new_distance[cur_node][0]
+        # print("#"*40)
+        # print(f"try compute foresight from {nodes[path[-1]]} to {nodes[i]}: fore {foresight_path}, real {length}, old {old_length}")
+        # if set(is_)==set([1]):print("satisfy the condition")
+        return length + (new_distance[cur_node][0] if set(is_)==set([1]) else 0)
+    length_and_foresight = 0
+    length = 0
+    paths = [[is_[:],length_and_foresight,[0],length]]
+    new_paths = []
+    
+    que = [None,None]
+    def push(p): #p = [mask,length,path]
+        if que[0]==None or que[0][1]>p[1]:
+            que[0],que[1] = p,que[0]
+        elif que[1]==None or que[1][1]>p[1]:
+            que[1]=p
+    for _ in range(len(nodes[1:])):
+        for mask,length_and_foresight ,path, old_length in paths:
+            que = [None,None]
+            for i in range(1,n+1):
+                if mask[i]==0:
+                    mask[i]=1
+                    push([mask[:],old_length+foresight(i,mask[:],old_length),(path+[i])[:],old_length+new_distance[path[-1]][i]])
+                    mask[i]=0
+            # print("U"*30)
+            # print(que)
+            if que[0] not in new_paths:new_paths.append(que[0])
+            if que[1] is not None and que[1] not in new_paths:new_paths.append(que[1])
+        new_paths = sorted(new_paths,key=lambda p:p[1],reverse=False)
+        paths = new_paths[:top_remain]
+        # print("I"*20)
+        paths_cvt = [[_1,_2,[nodes[i] for i in path],_3] for _1,_2,path,_3 in paths]
+        # print(paths_cvt)   
+        new_paths = [] 
+    new_paths = [[_1,_2+new_distance[path[-1]][0],path,_3] for _1,_2,path,_3 in new_paths]
+    new_paths = sorted(new_paths,key=lambda p:p[1],reverse=False)
+    path = paths[0][-2]
+    
+    # print("uncvt",path)
+    return [nodes[i] for i in path[1:]]
+    
 
 
 # def optimize_route_B(nodes):
@@ -292,15 +399,17 @@ def optimize_route(nodes):
     sumssss+=1
     pathA = optimize_route_A(nodes)
     costA = calculate_route_time(pathA)
-    pathB = optimize_route_D(nodes)
+    pathB = optimize_route_E(nodes)
     costB = calculate_route_time(pathB)
     improvement +=costB - costA
     if costA<costB:
         return pathA
     cnt+=1
     return pathB
-    # print(u:=optimize_route_A(nodes),calculate_route_time(u))
-    # print(u:=optimize_route_D(nodes),calculate_route_time(u))
+    # print(uA:=optimize_route_A(nodes),uA:=calculate_route_time(uA))
+    # print("^"*80)
+    # print(uB:=optimize_route_E(nodes),uB:=calculate_route_time(uB))
+    # if uA<uB: print(f"okkkkkkkkk: uA {uA}, uB {uB}")
     # exit(0)
 
 
@@ -333,12 +442,15 @@ def canonical_form(solution):
     return canonical_solution
 
 
-def tabu_search(solution, max_iter=20000):
+def tabu_search(solution, max_iter=10000):
     # Thay vì chỉ dùng deque, ta dùng thêm set để kiểm tra nhanh
     tabu_list = deque()
     tabu_set = set()
 
     best_solution = [route[:] for route in solution]
+    ###############################################
+    # optimize_route(best_solution[0])
+    ##############################################
     best_times = calculate_total_time(best_solution)
     best_times_val = max(best_times)
     length_tabu = 0
@@ -460,21 +572,25 @@ def tabu_search(solution, max_iter=20000):
                 oldest = tabu_list.popleft()
                 tabu_set.remove(oldest)
                 length_tabu -= 1
-        if iteration%500==0:
-            print(f"epoch {iteration} in {perf_counter()-tin:.4f}s with rate {cnt/sumssss:.2f} and improvement {improvement/sumssss:.2f}")
+        # if iteration%500==0:
+    #         print(f"epoch {iteration} in {perf_counter()-tin:.4f}s with rate {cnt/sumssss:.2f} and improvement {improvement/sumssss:.2f}")
 
-    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+    # print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
 
-    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+    # print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
     return best_solution, best_times
 
 
 initial_solution = initialize_solution_2(n, k)
-print(initial_solution)
-# print(max(calculate_total_time(initial_solution)))
+# print(initial_solution)
 optimized_solution, optimized_times = tabu_search(initial_solution)
-print("Total Times:", max(optimized_times))
+for sol in optimized_solution:
+    print(len(sol)+2)
+    print(*sol)
+# print(max(calculate_total_time(optimized_solution)))
 
-print("***********************************************")
-end_time = time.time()
-print(f"Thời gian chạy: {end_time - start_time:.2f} giây")
+# print("Total Times:", max(optimized_times))
+
+# print("***********************************************")
+# end_time = time.time()
+# print(f"Thời gian chạy: {end_time - start_time:.2f} giây")
