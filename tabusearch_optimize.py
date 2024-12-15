@@ -3,7 +3,7 @@ import numpy as np
 from collections import deque
 import sys
 import time
-
+import math
 
 start_time = time.time()
 
@@ -181,43 +181,6 @@ def optimize_route_C(nodes):
     path = paths[0][-1]
     return [nodes[i] for i in path[1:]]
 
-def optimize_route_C_1(nodes):
-    top_remain = 20
-    n = len(nodes)
-    nodes = [0]+nodes
-    init = sum([d[node] for node in nodes])
-    new_distance = [[distance_matrix[nodes[i]][nodes[j]] for i in range(len(nodes))]for j in range(len(nodes))]
-    is_ = [0 for _ in range(n+1)]
-    is_[0]=1
-    
-    paths = [[is_[:],init,[0]]]
-    new_paths = []
-    
-    que = [None,None]
-    def push(p): #p = [mask,length,path]
-        if que[0]==None or que[0][1]>p[1]:
-            que[0],que[1] = p,que[0]
-        elif que[1]==None or que[1][1]>p[1]:
-            que[1]=p
-    for _ in range(len(nodes[1:])):
-        for mask,old_length,path in paths:
-            que = [None,None]
-            for i in range(1,n+1):
-                if mask[i]==0:
-                    mask[i]=1
-                    # push([mask[:],old_length+new_distance[path[-1]][i],(path+[i])[:]])
-                    new_paths.append([mask[:],old_length+new_distance[path[-1]][i],(path+[i])[:]])
-                    mask[i]=0
-            # if que[0] not in new_paths:new_paths.append(que[0])
-            # if que[1] is not None and que[1] not in new_paths:new_paths.append(que[1])
-        new_paths = sorted(new_paths,key=lambda p:p[1],reverse=False)
-        paths = new_paths[:top_remain]   
-        new_paths = [] 
-    new_paths = [[_1,_2+new_distance[path[-1]][0],path] for _1,_2,path in new_paths]
-    new_paths = sorted(new_paths,key=lambda p:p[1],reverse=False)
-    path = paths[0][-1]
-    return [nodes[i] for i in path[1:]]
-
 def optimize_route_D(nodes):
     """
     fore sight k step
@@ -363,7 +326,7 @@ def canonical_form(solution):
     return canonical_solution
 
 
-def tabu_search(solution, max_iter=10000):
+def tabu_search(solution, max_iter=int(10000/math.log10(dc))):
     # Thay vì chỉ dùng deque, ta dùng thêm set để kiểm tra nhanh
     tabu_list = deque()
     tabu_set = set()
@@ -489,16 +452,20 @@ def tabu_search(solution, max_iter=10000):
                 tabu_set.remove(oldest)
                 length_tabu -= 1
 
-    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+    # print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
 
-    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+    # print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
     return best_solution, best_times
 
 
-initial_solution = initialize_solution_2(n, k)
-print(initial_solution)
+initial_solution = initialize_solution(n, k)
+# print(initial_solution)
 # print(max(calculate_total_time(initial_solution)))
 optimized_solution, optimized_times = tabu_search(initial_solution)
+print(k)
+for sol in optimized_solution:
+    print(len(sol)+2)
+    print(*([0]+sol+[0]))
 print("Total Times:", max(optimized_times))
 
 print("***********************************************")
