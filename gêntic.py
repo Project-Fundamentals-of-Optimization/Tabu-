@@ -21,8 +21,6 @@ with open(file_path, "r") as f:
         row = list(map(int, f.readline().strip().split()))
         distance_matrix.append(row)
 
-#########################################
-
 
 def optimize_route(route):
     # Tham lam
@@ -102,11 +100,11 @@ def generate_random_sequence_all(n, k):
 def gen_state(n):
     prop = random.random()
     if n > 30:
-        if prop < 0.035:
+        if prop < 0.05:
             state = generate_random_sequence_all(n, k)
-        elif prop < 0.4:
+        elif prop < 0.47:
             state = generate_random_sequence6(n, k)
-        elif prop < 0.8:
+        elif prop < 0.9:
             state = generate_random_sequence4(n, k)
         else:
             state = generate_random_sequence1(n, k)
@@ -168,7 +166,7 @@ def fitness(state, K):
 """# khởi tạo các giá trị ban đầu vào population"""
 
 population = PriorityQueue()
-MAX_SIZE = 40
+MAX_SIZE = 300
 top_g = [None, None]  # g<10 push ~ O(1) but g -> 100 slow
 is_added = {}
 
@@ -211,7 +209,7 @@ def queue_push(v, top_g, is_added, population):
     return None
 
 
-for times in range(16000):
+for times in range(32000):
     temp_state = gen_state(n)
 
     v = (-fitness(temp_state, k), temp_state)
@@ -274,7 +272,7 @@ def make_love(top_g, K, PROP_LOVE):
                 new_state.append([p1[i], mutation[i]][random.randint(0, 1)])
             else:
                 new_state.append([p1[i], p2[i]][random.randint(0, 1)])
-    elif prop < 0.5:
+    elif prop < 0.4:
 
         index = random.randint(1, int(len(p1)/2))
         new_state = p1[:index] + p2[index:]
@@ -325,15 +323,15 @@ def make_love(top_g, K, PROP_LOVE):
 
 
 ###################################################################################################
-for i in range(10000):
+for i in range(1000):
     v = make_love(top_g, k, PROP_LOVE)
 
     queue_push((-fitness(v, k), v), top_g, is_added, population)
 
 #################
-for c in range(125):
+for c in range(140):
     population_list_temp = take_out_take_back()
-    for i in range(110):
+    for i in range(100):
         if n < 7:
             p1 = population_list_temp[random.randint(0,  22)]
             p2 = population_list_temp[random.randint(0, 22)]
@@ -345,7 +343,7 @@ for c in range(125):
             v = make_love([p1, p2], k, PROP_LOVE)
             queue_push((-fitness(v, k), v), [p1, p2], is_added, population)
 
-for i in range(300):
+for i in range(10000):
     v = make_love(top_g, k, PROP_LOVE)
 
     queue_push((-fitness(v, k), v), top_g, is_added, population)
@@ -377,4 +375,4 @@ for worker in range(k):
     print(len(temp) + 2)
     print(optimize_route(temp))
 
-print(score)
+print(- score)

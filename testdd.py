@@ -1,3 +1,4 @@
+# PYTHON
 import random
 import numpy as np
 from collections import deque
@@ -5,7 +6,7 @@ import sys
 import time
 
 
-start_time = time.time()
+# start_time = time.time()
 
 file_path = "/mnt/c/Users/Admin/Desktop/code python/tabu_and_genetic_bản_đầu/data.txt"
 
@@ -44,19 +45,8 @@ def initialize_solution(n, k):
     solution = [[] for _ in range(k)]
 
     customers = list(range(1, n + 1))
-    random.shuffle(customers)
     for i in range(k):
         solution[i] = optimize_route(customers[i::k])
-
-    return solution
-
-
-def initialize_solution_5(n, k):
-    solution = [[] for _ in range(k)]
-
-    customers = list(range(1, n + 1))
-    for i in range(k):
-        solution[i].append(customers[i])
 
     return solution
 
@@ -92,22 +82,6 @@ def initialize_solution_3_random(n, k):
         solution[i].append(customers[3*i + 2])
 
     temp_i = 3 * k
-    for v in range(remaining_customers):
-        random_index = random.randint(0, k - 1)
-        solution[random_index].append(customers[temp_i + v - 1])
-
-    return solution
-
-
-def initialize_solution_7_random(n, k):
-    solution = [[] for _ in range(k)]
-    customers = list(range(1, n + 1))
-    remaining_customers = n - (0 * (k-1))
-    for i in range(k):
-
-        solution[i].append(customers[i])
-
-    temp_i = 0 * k
     for v in range(remaining_customers):
         random_index = random.randint(0, k - 1)
         solution[random_index].append(customers[temp_i + v - 1])
@@ -353,7 +327,7 @@ def optimize_route_E(nodes):
     """
     global n
 
-    top_remain = 5
+    top_remain = 2
     n = len(nodes)
     nodes = [0] + nodes
     # init = sum([d[node] for node in nodes])
@@ -524,7 +498,8 @@ def tabu_search(solution, max_iter=10000):
                 oldest = tabu_list.popleft()
                 tabu_set.remove(oldest)
                 length_tabu -= 1
-        elif prop < 0.9 and k > 7:
+
+        elif prop < 0.84 and k > 7:
             max_idx, min_idx = sorted_times[random.randint(
                 0, int(k/4))][0], sorted_times[random.randint(int(k/1.5) + 1, k-1)][0]
             temp_length_max = len(solution[max_idx])
@@ -535,7 +510,7 @@ def tabu_search(solution, max_iter=10000):
                 temp_mem_min = solution[min_idx][:]
 
                 # Tính delta
-                delta = int((temp_length_max - temp_length_min - 3)/2)
+                delta = int((temp_length_max - temp_length_min - 4)/2)
 
                 # Kiểm tra delta hợp lệ
                 if delta > 0 and delta <= temp_length_max:
@@ -581,7 +556,7 @@ def tabu_search(solution, max_iter=10000):
                 oldest = tabu_list.popleft()
                 tabu_set.remove(oldest)
                 length_tabu -= 1
-        elif prop < 1 and k > 7:
+        elif prop < 0.87 and k > 7:
             max_idx, min_idx = sorted_times[0][0], sorted_times[-1][0]
             temp_length_max = len(solution[max_idx])
             temp_length_min = len(solution[min_idx])
@@ -591,7 +566,7 @@ def tabu_search(solution, max_iter=10000):
                 temp_mem_min = solution[min_idx][:]
 
                 # Tính delta
-                delta = int((temp_length_max - temp_length_min - 2)/2)
+                delta = int((temp_length_max - temp_length_min)/2)
 
                 # Kiểm tra delta hợp lệ
                 if delta > 0 and delta <= temp_length_max:
@@ -643,7 +618,7 @@ def tabu_search(solution, max_iter=10000):
 
 # print(max(calculate_total_time(initial_solution)))
 if n == 200 and k == 10:
-    initial_solution = initialize_solution(n, k)
+    initial_solution = initialize_solution_2(n, k)
     optimized_solution, optimized_times = tabu_search(initial_solution, 3000)
 else:
     initial_solution = initialize_solution_2(n, k)
@@ -654,4 +629,3 @@ print(k)
 for sol in optimized_solution:
     print(len(sol)+2)
     print(*([0]+sol+[0]))
-print(max(optimized_times))
