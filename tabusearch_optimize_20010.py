@@ -523,7 +523,7 @@ for i in range(50):
     # print(max(calculate_total_time(initial_solution)))
     optimized_solution, optimized_times = tabu_search(initial_solution)
     list_of_ans.append(max(optimized_times))
-    print(f"iter {i} of {file_path}: in {perf_counter()-tin:.2f}s")
+    print(f"iter {i} of {file_path}: in {perf_counter()-tin:.2f}s with loss {list_of_ans[-1]}")
 print(list_of_ans)
 # print(k)
 # for sol in optimized_solution:
